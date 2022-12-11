@@ -1,0 +1,6 @@
+export const config = {
+  TODOS_TABLE: process.env.TODOS_TABLE,
+  TODOS_CREATED_AT_INDEX: process.env.TODOS_CREATED_AT_INDEX,
+  ATTACHMENT_S3_BUCKET: process.env.ATTACHMENT_S3_BUCKET,
+  URL_EXPIRATION: process.env.URL_EXPIRATION
+};
