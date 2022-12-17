@@ -11,6 +11,7 @@ const logger = createLogger('Create todo item.');
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Start creating a new todo item.');
+
     if (!event.body) {
       logger.error('Invalid request body.');
       return {

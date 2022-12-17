@@ -35,12 +35,14 @@ export async function patchTodo(
   todoId: string,
   updatedTodo: UpdateTodoRequest
 ): Promise<void> {
-  await Axios.patch(`${apiEndpoint}/todos/${todoId}`, JSON.stringify(updatedTodo), {
+  const response = await Axios.patch(`${apiEndpoint}/todos/${todoId}`, JSON.stringify(updatedTodo), {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     }
   });
+
+
 }
 
 export async function patchTodoAttachment(
@@ -72,6 +74,21 @@ export async function deleteTodo(
       'Authorization': `Bearer ${idToken}`
     }
   });
+}
+
+/** Call the delete todo's attachment lambda */
+export async function deleteTodoAttachment(
+  idToken: string,
+  todoId: string
+): Promise<boolean> {
+  const response = await Axios.delete(`${apiEndpoint}/todos/${todoId}/attachment`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    }
+  });
+
+  return response.status === 204 ? true : false;
 }
 
 export async function getUploadUrl(

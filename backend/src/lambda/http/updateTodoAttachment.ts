@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import * as middy from "middy";
 import { cors, httpErrorHandler } from "middy/middlewares";
+import { GetUserId } from "../../helpers/getUserId";
 import { TodoItemsService } from "../../services/todoItems";
 import { createLogger } from "../../utils/logger";
-import { getUserId } from "../utils";
 
 const todoService = new TodoItemsService();
 const logger = createLogger('Update a todo item attachment');
@@ -25,7 +25,7 @@ export const handler = middy(
 
         const payload = JSON.parse(event.body);
 
-        const userId: string = getUserId(event);
+        const userId: string = GetUserId(event);
 
         logger.info('All params: ', {
             todoId,

@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
 import * as AWSXRay from 'aws-xray-sdk';
 import { Logger } from 'winston';
+import { BucketAndObjectInfo } from '../models/BucketAndObjectInfo';
 import { config } from "../utils/config";
 import { createLogger } from '../utils/logger';
 
@@ -33,6 +34,50 @@ export class AttachmentsAccess {
         } catch (error) {
             this.logger.error('Something went wrong.', {
                 error
+            });
+        }
+    };
+
+    /** Delete an attachment (object in a bucket). */
+    deleteAttachment = async (s3Key: string): Promise<boolean> => {
+        this.logger.info('Start deleting attachment.');
+
+        const bucketAndObjectInfos: BucketAndObjectInfo = {
+            Bucket: this.bucketName,
+            Key: s3Key
+        };
+
+        try {
+            const result = await this.s3.deleteObject(bucketAndObjectInfos).promise();
+
+            if (!result.$response.error) {
+                this.logger.info('Attachment deleted successfully!');
+                return true;
+            }
+        } catch (error) {
+            this.logger.error('Something went wrong!', {
+                error
+            });
+        }
+    };
+
+    /** Check if an object exists in a bucket. */
+    isObjectExist = async (s3Key: string): Promise<boolean> => {
+        this.logger.info('Checking for an object existence.');
+
+        try {
+            const bucketAndObjectInfos: BucketAndObjectInfo = {
+                Bucket: this.bucketName,
+                Key: s3Key
+            };
+
+            const result = await this.s3.headObject(bucketAndObjectInfos).promise();
+
+            return !!result;
+        } catch (error) {
+            this.logger.error('Something went wrong!', {
+                error,
+                s3Key
             });
         }
     };
