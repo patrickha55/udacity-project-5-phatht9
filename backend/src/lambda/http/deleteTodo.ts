@@ -2,17 +2,24 @@ import 'source-map-support/register';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as middy from 'middy';
 import { cors, httpErrorHandler } from 'middy/middlewares';
-import { getUserId } from '../utils';
 import { TodoItemsService } from '../../services/todoItems';
+import { createLogger } from '../../utils/logger';
+import { ExtractEvent } from '../../helpers/ExtractEvent';
 
 const todoService = new TodoItemsService();
+const logger = createLogger('Delete todo lambda fuction.');
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const todoId = event.pathParameters.todoId;
-    const userId = getUserId(event);
+    logger.info('Start extracting info from api gateway event.');
+
+    const { userId, todoId } = ExtractEvent(event);
 
     if (!todoId) {
+      logger.warn('Todo id is invalid.', {
+        todoId
+      });
+
       return {
         statusCode: 400,
         body: JSON.stringify({
@@ -22,6 +29,10 @@ export const handler = middy(
     }
 
     if (!userId) {
+      logger.warn('User id is invalid.', {
+        userId
+      });
+
       return {
         statusCode: 400,
         body: JSON.stringify({
@@ -33,6 +44,8 @@ export const handler = middy(
     const IsTodoExists = await todoService.IsTodoExistsAsync(todoId, userId);
 
     if (!IsTodoExists) {
+      logger.info('Todo item doesn\'t exists');
+
       return {
         statusCode: 404,
         body: JSON.stringify({
@@ -47,7 +60,7 @@ export const handler = middy(
       return {
         statusCode: 400,
         body: JSON.stringify({
-          error: 'Invalid todoId.'
+          error: 'Fail to delete an todo item.'
         })
       };
     }
