@@ -55,6 +55,35 @@ export class TodoItemsAccess {
     };
 
     /**
+     * Get an todo item of an user.
+     * @param todoId ID of a todo.
+     * @param userId ID of an user.
+     * @returns A todo item
+     */
+    getTodoItemAsync = async (todoId: string, userId: string): Promise<TodoItem> => {
+        this.logger.info('Begin getting an todo item.', {
+            todoId,
+            userId
+        });
+
+        const result = await this.docClient.get({
+            TableName: this.todosTable,
+            Key: {
+                userId,
+                todoId
+            }
+        }).promise();
+
+        const todoItem = result.Item;
+
+        this.logger.info('Got an todo item.', {
+            todoItem
+        });
+
+        return todoItem as TodoItem;
+    };
+
+    /**
      * Create a new todo.
      * @param newTodo Task and due date.
      * @returns A new todo item.
@@ -202,15 +231,9 @@ export class TodoItemsAccess {
         try {
             this.logger.info('Checking for a todo item existence.');
 
-            const result = await this.docClient.get({
-                TableName: this.todosTable,
-                Key: {
-                    userId,
-                    todoId
-                }
-            }).promise();
+            const todoItem = await this.getTodoItemAsync(todoId, userId);
 
-            return !!result.Item;
+            return !!todoItem;
         } catch (error) {
             this.logger.error('Something went wrong', {
                 error

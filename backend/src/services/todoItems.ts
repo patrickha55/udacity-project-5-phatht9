@@ -1,15 +1,13 @@
-// import { AttachmentUtils } from './attachmentUtils';
-// import * as createError from 'http-errors';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { createLogger } from '../utils/logger';
 import { CreateTodoRequest } from '../dtos/requests/CreateTodoRequest';
-import { getUserId } from '../lambda/utils';
 import { Logger } from 'winston';
 import { TodoItem } from '../models/TodoItem';
 import { TodoItemDTO } from '../dtos/responses/TodoItemDTO';
 import { TodoItemsAccess } from '../repositories/todoItemsAccess';
 import * as uniqueId from 'uuid';
 import { UpdateTodoRequest } from '../dtos/requests/UpdateTodoRequest';
+import { GetUserId } from '../helpers/getUserId';
 
 export class TodoItemsService {
     private readonly todoItemsAccess: TodoItemsAccess;
@@ -28,7 +26,7 @@ export class TodoItemsService {
     async getAllUsersTodoItemsAsync(event: APIGatewayProxyEvent): Promise<TodoItemDTO[]> {
         this.logger.info('Get the userId');
 
-        const userId = getUserId(event);
+        const userId = GetUserId(event);
 
         const todoItems = await this.todoItemsAccess.getAllTodoItemsAsync(userId);
 
@@ -47,6 +45,26 @@ export class TodoItemsService {
     }
 
     /**
+     * 
+     * @param todoId 
+     * @param userId 
+     */
+    async getTodoItemAsync(todoId: string, userId: string): Promise<TodoItemDTO> {
+        this.logger.info('Getting an todo item.');
+
+        const todoItem: TodoItem = await this.todoItemsAccess.getTodoItemAsync(todoId, userId);
+
+        return {
+            todoId: todoItem.todoId,
+            createdAt: todoItem.createdAt,
+            attachmentUrl: todoItem.attachmentUrl,
+            done: todoItem.done,
+            dueDate: todoItem.dueDate,
+            name: todoItem.name
+        };
+    };
+
+    /**
      * Create new attributes for a todo and calling createTodo from data access.
      * @param event An event.
      * @returns A new todo item.
@@ -54,7 +72,7 @@ export class TodoItemsService {
     async createATodoAsync(event: APIGatewayProxyEvent): Promise<TodoItemDTO> {
         this.logger.info('Create a todo.');
 
-        const userId = getUserId(event);
+        const userId = GetUserId(event);
 
         const parsedBody: CreateTodoRequest = JSON.parse(event.body);
 
@@ -90,18 +108,7 @@ export class TodoItemsService {
      * @param event An event
      * @returns True if update successfully, else false.
      */
-    async updateATodoAsync(event: APIGatewayProxyEvent): Promise<boolean> {
-        const todoId: string = event.pathParameters.todoId;
-        const userId: string = getUserId(event);
-
-        this.logger.info('todoId and userId: ', {
-            todoId, userId
-        });
-
-        if (!todoId || !userId) {
-            throw new Error('Invalid todoId or userId');
-        }
-
+    async updateATodoAsync(todoId: string, userId: string, todoItem: UpdateTodoRequest): Promise<boolean> {
         const existing = await this.todoItemsAccess.todoExistsAsync(todoId, userId);
 
         if (!existing) {
@@ -109,15 +116,16 @@ export class TodoItemsService {
             return false;
         }
 
-        const todo: UpdateTodoRequest = JSON.parse(event.body);
-
-        this.logger.info('Updated todo attributes', {
-            todo
-        });
-
-        return await this.todoItemsAccess.updateTodoAsync(todoId, userId, todo);;
+        return await this.todoItemsAccess.updateTodoAsync(todoId, userId, todoItem);;
     }
 
+    /**
+     * Add a new attachment url to the todo item.
+     * @param todoId ID of an todo item.
+     * @param userId ID of an user.
+     * @param s3Key Name of the object in s3.
+     * @returns True if updated successfully, else false.
+     */
     async updateATodoAttachment(todoId: string, userId: string, s3Key: string): Promise<boolean> {
         return this.todoItemsAccess.updateTodoAttachmentAsync(todoId, userId, s3Key);
     }

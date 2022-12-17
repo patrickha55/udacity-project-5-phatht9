@@ -9,7 +9,8 @@ export function ExtractEvent(event: APIGatewayProxyEvent): CompositeKey {
     const userId: string = GetUserId(event);
 
     logger.info('todoId and userId: ', {
-        todoId, userId
+        todoId,
+        userId
     });
 
     return {

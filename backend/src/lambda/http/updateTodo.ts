@@ -1,11 +1,14 @@
 import 'source-map-support/register';
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as middy from 'middy';
 import { cors, httpErrorHandler } from 'middy/middlewares';
 import { TodoItemsService } from '../../services/todoItems';
+import { createLogger } from '../../utils/logger';
+import { UpdateTodoRequest } from '../../dtos/requests/UpdateTodoRequest';
+import { ExtractEvent } from '../../helpers/ExtractEvent';
 
 const todoService = new TodoItemsService();
+const logger = createLogger('Update todo logger');
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -27,7 +30,15 @@ export const handler = middy(
       };
     }
 
-    const result = await todoService.updateATodoAsync(event);
+    const { userId, todoId } = ExtractEvent(event);
+
+    const todo: UpdateTodoRequest = JSON.parse(event.body);
+
+    logger.info('Updated todo attributes', {
+      todo
+    });
+
+    const result = await todoService.updateATodoAsync(todoId, userId, todo);
 
     if (result) {
       return {
