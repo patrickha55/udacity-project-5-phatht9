@@ -13,6 +13,7 @@ import {
   Image,
   Loader
 } from 'semantic-ui-react';
+import SemanticDatepicker from 'react-semantic-ui-datepickers';
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api';
 import Auth from '../auth/Auth';
@@ -27,21 +28,27 @@ interface TodosState {
   todos: Todo[];
   newTodoName: string;
   loadingTodos: boolean;
+  dueDate: string;
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    dueDate: ''
   };
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value });
   };
 
-  onEditButtonClick = (todoId: string) => {
-    this.props.history.push(`/todos/${todoId}/edit`);
+  handleDueDateChange = (event: any, data: any) => {
+    event.preventDefault();
+
+    const dueDate = data.value;
+
+    this.setState({ dueDate: dateFormat(dueDate, 'dd-mm-yyyy') as string });
   };
 
   onEditButtonClick = (todoId: string, hasAttachment: string) => {
@@ -55,10 +62,9 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         return;
       }
 
-      const dueDate = this.calculateDueDate();
       const newTodo = await createTodo(this.props.auth.getIdToken(), {
         name: this.state.newTodoName,
-        dueDate
+        dueDate: this.state.dueDate
       });
 
       this.setState({
@@ -133,18 +139,26 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <Grid.Row>
         <Grid.Column width={16}>
           <Input
-            action={{
-              color: 'teal',
-              labelPosition: 'left',
-              icon: 'add',
-              content: 'New task',
-              onClick: this.onTodoCreate
-            }}
+
             fluid
             actionPosition="left"
             placeholder="To change the world..."
             onChange={this.handleNameChange}
-          />
+          >
+            <input />
+            <SemanticDatepicker
+              onChange={this.handleDueDateChange}
+              format='DD-MM-YYYY'
+              minDate={new Date()}
+            />
+            <Button
+              type='submit'
+              color='blue'
+              content='Create task'
+              onKeyPress={this.onTodoCreate}
+              onClick={this.onTodoCreate}
+            />
+          </Input>
         </Grid.Column>
         <Grid.Column width={16}>
           <Divider />
@@ -217,12 +231,5 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         })}
       </Grid>
     );
-  }
-
-  calculateDueDate(): string {
-    const date = new Date();
-    date.setDate(date.getDate() + 7);
-
-    return dateFormat(date, 'yyyy-mm-dd') as string;
   }
 }
