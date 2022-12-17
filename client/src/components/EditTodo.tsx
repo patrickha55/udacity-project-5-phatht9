@@ -1,23 +1,37 @@
-import React, { useState } from "react";
-import { Form, Button } from 'semantic-ui-react';
+import React, { useEffect, useState } from "react";
+import { Form, Button, Icon } from 'semantic-ui-react';
 import Auth from '../auth/Auth';
-import { getUploadUrl, patchTodoAttachment, uploadFile } from '../api/todos-api';
+import { getUploadUrl, patchTodoAttachment, uploadFile, deleteTodoAttachment } from '../api/todos-api';
+
 enum UploadState {
   NoUpload,
   FetchingPresignedUrl,
   UploadingFile
 }
+
 interface EditTodoProps {
   match: {
     params: {
       todoId: string;
+      hasAttachment: string;
     };
   };
   auth: Auth;
 }
+
 export const EditTodo = ({ match, auth }: EditTodoProps) => {
   const [file, setFile] = useState(undefined);
   const [uploadState, setUploadState] = useState(UploadState.NoUpload);
+  const [hasAttachmentStatus, setHasAttachmentStatus] = useState(false);
+
+  useEffect(() => {
+    if (match.params.hasAttachment === 'yes') {
+      setHasAttachmentStatus(true);
+    }
+    else {
+      setHasAttachmentStatus(false);
+    }
+  }, [match.params.hasAttachment]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -53,11 +67,30 @@ export const EditTodo = ({ match, auth }: EditTodoProps) => {
         match.params.todoId
       );
 
-      alert('File was uploaded!');
+      setHasAttachmentStatus(true);
+
+      alert(`File was uploaded! ${hasAttachmentStatus}`);
     } catch (e) {
       alert('Could not upload a file: ' + (e as Error).message);
     } finally {
       setUploadState(UploadState.NoUpload);
+    }
+  };
+
+  const handleTodoAttachmentDelete = async () => {
+    try {
+      const result: boolean = await deleteTodoAttachment(
+        auth.getIdToken(),
+        match.params.todoId
+      );
+
+      if (result) {
+        alert('Attachment deleted successfully!');
+      }
+
+      setHasAttachmentStatus(false);
+    } catch (e) {
+      alert('Could not delete this todo item\'s attachment: ' + (e as Error).message);
     }
   };
 
@@ -70,16 +103,31 @@ export const EditTodo = ({ match, auth }: EditTodoProps) => {
       </Button>
     </div>);
   };
-  return (<div>
+  return (<>
     <h1>Upload new image</h1>
 
-    <Form onSubmit={handleSubmit}>
-      <Form.Field>
-        <label>File</label>
-        <input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
-      </Form.Field>
+    <div className="row">
+      <div className="col-6">
+        <Form onSubmit={handleSubmit}>
+          <Form.Field>
+            <label>File</label>
+            <input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
+          </Form.Field>
 
-      {renderButton()}
-    </Form>
-  </div>);
+          {renderButton()}
+        </Form>
+      </div>
+      <div className="col-6">
+        <Button
+          icon
+          color="red"
+          onClick={() => handleTodoAttachmentDelete()}
+          data-toggle="tooltip" data-placement="right" title="Delete this todo item's attachment."
+          disabled={hasAttachmentStatus}
+        >
+          <Icon name="delete" />
+        </Button>
+      </div>
+    </div>
+  </>);
 };

@@ -44,7 +44,11 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     this.props.history.push(`/todos/${todoId}/edit`);
   };
 
-  onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
+  onEditButtonClick = (todoId: string, hasAttachment: string) => {
+    this.props.history.push(`/todos/${todoId}/edit/${hasAttachment}`);
+  };
+
+  onTodoCreate = async (event: any) => {
     try {
       if (!this.state.newTodoName) {
         alert('Please provide a todo.');
@@ -81,11 +85,14 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   onTodoCheck = async (pos: number) => {
     try {
       const todo = this.state.todos[pos];
+
       await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
         name: todo.name,
         dueDate: todo.dueDate,
-        done: !todo.done
+        done: !todo.done,
+        attachmentUrl: todo.attachmentUrl!
       });
+
       this.setState({
         todos: update(this.state.todos, {
           [pos]: { done: { $set: !todo.done } }
@@ -185,7 +192,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 <Button
                   icon
                   color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
+                  onClick={() => this.onEditButtonClick(todo.todoId, todo.attachmentUrl !== '' ? 'no' : 'yes')}
                 >
                   <Icon name="pencil" />
                 </Button>
