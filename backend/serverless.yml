@@ -31,13 +31,6 @@ provider:
     # Enable API Gateway logs
     restApi: true
 
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - xray:PutTelemetryRecords
-        - xray:PutTraceSegments
-      Resource: "*"
-
 custom:
   documentation:
     api:
@@ -71,6 +64,11 @@ functions:
         Action:
           - "dynamodb:GetItem"
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -90,6 +88,13 @@ functions:
         Action:
           - dynamodb:Query
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource:
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}"
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -110,6 +115,11 @@ functions:
       - Effect: "Allow"
         Action:
           - dynamodb:PutItem
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
 
   UpdateTodo:
@@ -133,6 +143,11 @@ functions:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
 
   UpdateTodoAttachment:
     handler: src/lambda/http/updateTodoAttachment.handler
@@ -147,6 +162,11 @@ functions:
       - Effect: "Allow"
         Action:
           - "dynamodb:UpdateItem"
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
 
   DeleteTodoAttachment:
@@ -170,7 +190,15 @@ functions:
       - Effect: Allow
         Action:
           - s3:ListBucket
-        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        Resource: "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource:
+          - "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*"
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+          - "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}"
 
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
@@ -187,6 +215,11 @@ functions:
           - "dynamodb:GetItem"
           - "dynamodb:DeleteItem"
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}"
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
@@ -202,6 +235,11 @@ functions:
         Action:
           - "s3:PutObject"
           - "s3:GetObject"
+        Resource: "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*"
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
         Resource: "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*"
 
 resources:
