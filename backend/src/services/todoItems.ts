@@ -54,6 +54,10 @@ export class TodoItemsService {
 
         const todoItem: TodoItem = await this.todoItemsAccess.getTodoItemAsync(todoId, userId);
 
+        if (!todoItem) {
+            return undefined;
+        }
+
         return {
             todoId: todoItem.todoId,
             createdAt: todoItem.createdAt,

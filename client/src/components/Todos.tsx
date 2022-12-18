@@ -62,6 +62,11 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         return;
       }
 
+      if (!this.state.dueDate) {
+        alert('Please select a due date.');
+        return;
+      }
+
       const newTodo = await createTodo(this.props.auth.getIdToken(), {
         name: this.state.newTodoName,
         dueDate: this.state.dueDate
@@ -105,7 +110,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         })
       });
     } catch {
-      alert('Todo deletion failed');
+      alert('Todo status change failed!');
     }
   };
 
