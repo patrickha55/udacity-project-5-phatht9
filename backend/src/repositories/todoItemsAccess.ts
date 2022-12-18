@@ -74,6 +74,11 @@ export class TodoItemsAccess {
             }
         }).promise();
 
+        if (!result.Item) {
+            this.logger.info('Todo item is not found.');
+            return undefined;
+        }
+
         const todoItem = result.Item;
 
         this.logger.info('Got an todo item.', {

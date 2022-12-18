@@ -43,6 +43,15 @@ export const handler = middy(
 
         const item: TodoItemDTO = await todoService.getTodoItemAsync(todoId, userId);
 
+        if (!item) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({
+                    error: 'Todo with the provided id doesn\'t exist.'
+                })
+            };
+        }
+
         return {
             statusCode: 200,
             body: JSON.stringify({
